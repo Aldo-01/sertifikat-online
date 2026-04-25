@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifikat</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+        .container{max-width:800px;width:100%}
+        .certificate{background:white;border-radius:12px;box-shadow:0 25px 80px rgba(0,0,0,0.3);overflow:hidden}
+        .cert-border{border:8px solid #2c3e50;margin:15px;background:linear-gradient(to bottom,#fff9f0,#fff)}
+        .cert-content{border:2px solid #c19b6c;margin:10px;padding:35px 20px;text-align:center;position:relative;overflow:hidden}
+        .watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:80px;color:rgba(0,0,0,0.03);pointer-events:none;white-space:nowrap}
+        .cert-logo{width:70px;height:70px;object-fit:contain;margin-bottom:8px}
+        .cert-title{font-size:36px;color:#2c3e50;letter-spacing:5px;text-transform:uppercase;font-weight:bold}
+        .cert-subtitle{font-size:18px;letter-spacing:3px;margin:6px 0 12px}
+        .cert-line{width:110px;height:2px;margin:0 auto 15px}
+        .cert-name{font-size:30px;color:#2c3e50;font-weight:bold;font-family:Georgia,serif;margin:8px 0}
+        .cert-course{font-size:19px;font-style:italic;margin:6px 0 15px}
+        .cert-info-row{display:flex;justify-content:center;gap:60px;margin:15px 0}
+        .cert-info-label{font-size:11px;color:#999}
+        .cert-info-value{font-weight:bold;font-size:16px}
+        .cert-barcode-box{display:inline-block;padding:15px;border:2px dashed #ddd;border-radius:8px;margin:12px 0;background:#fafafa}
+        .cert-sig-row{display:flex;justify-content:space-around;margin-top:30px;flex-wrap:wrap;gap:20px}
+        .signature-box{text-align:center;min-width:140px}
+        .signature-line{width:150px;height:1px;background:#333;margin:0 auto 5px}
+        .signature-name{font-weight:bold;font-size:14px}
+        .signature-role{font-size:10px;color:#999}
+        .stamp-circle{width:75px;height:75px;border:3px solid #c0392b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#c0392b;font-weight:bold;font-size:11px;transform:rotate(-15deg);opacity:0.8}
+        .cert-footer{margin-top:20px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#bbb}
+        
+        .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px}
+        .btn{padding:14px 28px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:16px;color:white;transition:all 0.3s}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.3)}
+        .btn-download{background:#27ae60}
+        .btn-print{background:#2980b9}
+        .btn-share{background:#f39c12}
+        
+        .error-box{background:white;padding:50px;border-radius:15px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-width:450px;margin:50px auto}
+        .error-box .icon{font-size:70px;margin-bottom:15px}
+        .error-box h2{color:#e74c3c}
+        
+        @media print{body{background:white;padding:0}.actions{display:none!important}.certificate{box-shadow:none;border-radius:0}}
+        @media(max-width:500px){.cert-content{padding:25px 12px}.cert-title{font-size:26px}.cert-name{font-size:24px}.cert-info-row{gap:30px}}
+    </style>
+</head>
+<body>
+    <div class="container" id="app"></div>
+    <script>
+        window.onload=function(){
+            const p=new URLSearchParams(window.location.search);
+            const e=p.get('d');
+            if(!e){showError('Link Tidak Valid','Tidak ada data sertifikat.');return}
+            try{const d=JSON.parse(decodeURIComponent(escape(atob(e))));render(d)}catch(err){showError('Data Rusak','Data tidak dapat dibaca.')}
+        };
+        
+        function render(d){
+            document.title='Sertifikat - '+(d.n||'Peserta');
+            document.getElementById('app').innerHTML=`
+                <div class="certificate" id="cert">
+                    <div class="cert-border" style="border-color:${d.br||'#2c3e50'};background:#fff">
+                        <div class="cert-content" style="border-color:${d.ac||'#c19b6c'}">
+                            <div class="watermark">VERIFIED</div>
+                            ${d.lg?`<img class="cert-logo" src="${d.lg}" onerror="this.style.display='none'">`:''}
+                            <h1 class="cert-title">SERTIFIKAT</h1>
+                            <h2 class="cert-subtitle" style="color:${d.ac||'#c19b6c'}">PENGHARGAAN</h2>
+                            <div class="cert-line" style="background:${d.ac||'#c19b6c'}"></div>
+                            <p style="font-size:14px;color:#888;">Diberikan Kepada</p>
+                            <h3 class="cert-name">${d.n||'-'}</h3>
+                            <div style="width:60px;height:1px;background:${d.ac||'#c19b6c'};margin:6px auto;"></div>
+                            <p style="font-size:13px;color:#777;">Atas keberhasilan menyelesaikan</p>
+                            <h4 class="cert-course" style="color:${d.ac||'#c19b6c'}">${d.c||'-'}</h4>
+                            <div class="cert-info-row">
+                                <div><p class="cert-info-label">Tanggal</p><p class="cert-info-value">${d.dt||'-'}</p></div>
+                                <div><p class="cert-info-label">Nilai</p><p class="cert-info-value">${d.sc||'-'}</p></div>
+                            </div>
+                            <div class="cert-barcode-box">
+                                <svg id="bc"></svg>
+                                <p style="font-weight:bold;font-family:monospace;font-size:12px;margin-top:3px;">${d.cd||'-'}</p>
+                                <p style="font-size:9px;color:#bbb;">Scan untuk verifikasi</p>
+                            </div>
+                            <div class="cert-sig-row">
+                                <div class="signature-box"><div class="signature-line"></div><p class="signature-name">${d.sg||'-'}</p><p class="signature-role">${d.tt||'-'}</p></div>
+                                <div class="stamp-circle">DISETUJUI</div>
+                            </div>
+                            <div class="cert-footer"><p>Sertifikat digital - sah tanpa tanda tangan basah</p><p style="color:#3498db;font-size:10px;">${window.location.href}</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-download" onclick="downloadCert()">📥 Download</button>
+                    <button class="btn btn-print" onclick="window.print()">🖨️ Cetak</button>
+                    <button class="btn btn-share" onclick="shareCert()">📤 Bagikan</button>
+                </div>`;
+            if(d.cd)try{JsBarcode('#bc',d.cd,{format:'CODE128',lineColor:'#2c3e50',width:2,height:40,displayValue:false,margin:5,background:'#ffffff'})}catch(e){}
+        }
+        
+        function showError(t,m){document.getElementById('app').innerHTML=`<div class="error-box"><div class="icon">🔍</div><h2>${t}</h2><p style="color:#888;">${m}</p></div>`}
+        async function downloadCert(){const c=await html2canvas(document.getElementById('cert'),{scale:3,backgroundColor:'#ffffff'});const a=document.createElement('a');a.download='sertifikat-'+Date.now()+'.png';a.href=c.toDataURL('image/png');a.click()}
+        function shareCert(){if(navigator.share)navigator.share({title:'Sertifikat Saya',text:'Lihat sertifikat saya!',url:window.location.href});else{copyText(window.location.href);alert('📋 Link dicopy!')}}
+        function copyText(t){navigator.clipboard.writeText(t)}
+    </script>
+</body>
+</html>
